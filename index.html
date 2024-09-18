@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #scanner {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            margin: 0 auto;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Food Barcode Scanner</h1>
+    <p>Scan a barcode to get food details!</p>
+
+    <div id="scanner"></div>
+    <button id="start-scan">Start Scanning</button>
+
+    <div id="result"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script>
+        const scannerDiv = document.getElementById('scanner');
+        const resultDiv = document.getElementById('result');
+        const startScanButton = document.getElementById('start-scan');
+
+        // Function to start the scanner
+        function startScanner() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerDiv, // Or '#yourElement' (optional)
+                },
+                decoder: {
+                    readers: ["ean_reader"] // ean_reader is for barcodes (13-digit)
+                }
+            }, function (err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            // When a barcode is detected
+            Quagga.onDetected(function (data) {
+                const code = data.codeResult.code;
+                resultDiv.innerHTML = `<p>Barcode detected: ${code}</p>`;
+                // Call API here to fetch the food details
+                fetchFoodDetails(code);
+            });
+        }
+
+        // Start the scanner on button click
+        startScanButton.addEventListener('click', startScanner);
+
+        // Function to fetch food details from Open Food Facts API
+        function fetchFoodDetails(barcode) {
+            const apiUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 1) {
+                        const product = data.product;
+                        resultDiv.innerHTML += `
+                            <h3>${product.product_name}</h3>
+                            <p><strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}</p>
+                            <p><strong>Nutrition facts:</strong> ${product.nutriments.energy_value || 'N/A'} ${product.nutriments.energy_unit || ''}</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML += `<p>Product not found.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching product details:', error);
+                    resultDiv.innerHTML += `<p>Error fetching product details.</p>`;
+                });
+        }
+    </script>
+</body>
+</html>
