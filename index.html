@@ -3,44 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Barcode Scanner with Upload and History</title>
+    <title>80s Pop Art Food Barcode Scanner</title>
     <!-- Bootstrap for UI enhancement -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
             text-align: center;
-            margin: 50px;
+            background-color: #f3e5f5; /* Light pink background */
+            color: #2e2e2e;
+            margin: 0;
+            padding: 0;
         }
-        #scanner {
-            width: 100%;
-            max-width: 600px;
-            height: auto;
-            margin: 0 auto;
-        }
-        #result {
+
+        h1 {
+            color: #ff4081; /* Bright pink */
+            font-size: 3rem;
             margin-top: 20px;
         }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Big Button */
+        #upload, #searchButton {
+            background-color: #00bfa5; /* Light green */
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #upload:hover, #searchButton:hover {
+            background-color: #00897b; /* Darker green */
+        }
+
+        /* Image and Result Styling */
         img {
             max-width: 100%;
             height: auto;
+        }
+
+        #result, #history {
+            margin-top: 20px;
+        }
+
+        /* Pop Art Background */
+        .pop-art-background {
+            background-image: url('https://www.publicdomainpictures.net/pictures/270000/nahled/cartoon-donuts-background.jpg');
+            background-size: cover;
+            padding: 50px 0;
+            border-radius: 15px;
+        }
+
+        .product-card {
+            background-color: #e0f7fa; /* Light blue */
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card h4 {
+            color: #ff80ab; /* Pink */
+        }
+
+        .product-card img {
+            max-width: 150px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Food Barcode Scanner</h1>
-        <p>Upload an image of a barcode to get food details!</p>
+        <h1>80s Pop Art Food Barcode Scanner</h1>
+        <div class="pop-art-background">
+            <p>Upload an image of a barcode to get food details!</p>
 
-        <!-- File input for image uploads (multiple supported) -->
-        <input type="file" id="upload" accept="image/*" multiple>
-        <div id="scanner"></div>
-        
-        <!-- Search functionality -->
-        <input type="text" id="searchInput" class="form-control mt-3" placeholder="Search for low-sugar foods">
-        <button id="searchButton" class="btn btn-primary mt-2">Search</button>
+            <!-- Big Button for Image Upload -->
+            <input type="file" id="upload" accept="image/*" multiple>
+            <div id="scanner"></div>
+            
+            <!-- Search functionality -->
+            <input type="text" id="searchInput" class="form-control mt-3" placeholder="Search for low-sugar foods">
+            <button id="searchButton" class="btn btn-primary mt-2">Search</button>
 
-        <div id="result"></div>
+            <div id="result"></div>
+        </div>
 
         <!-- History Section -->
         <div id="history" class="mt-5"></div>
@@ -96,14 +151,21 @@
                 .then(data => {
                     if (data.status === 1) {
                         const product = data.product;
+                        const imageUrl = product.image_url ? `<img src="${product.image_url}" alt="${product.product_name}">` : '';
+                        const cost = product.price ? `<p><strong>Cost:</strong> $${product.price}</p>` : `<p><strong>Cost:</strong> Not available</p>`;
+                        
                         resultDiv.innerHTML += `
-                            <h3>${product.product_name}</h3>
-                            <p><strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}</p>
-                            <p><strong>Allergens:</strong> ${product.allergens || 'N/A'}</p>
-                            <p><strong>Labels:</strong> ${product.labels || 'N/A'}</p>
-                            <p><strong>Nutrition facts:</strong> ${product.nutriments.energy_value || 'N/A'} ${product.nutriments.energy_unit || ''}</p>
-                            <p><strong>Fat:</strong> ${product.nutriments.fat_value || 'N/A'}g</p>
-                            <p><strong>Sugar:</strong> ${product.nutriments.sugars_value || 'N/A'}g</p>
+                            <div class="product-card">
+                                ${imageUrl}
+                                <h4>${product.product_name}</h4>
+                                <p><strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}</p>
+                                <p><strong>Allergens:</strong> ${product.allergens || 'N/A'}</p>
+                                <p><strong>Labels:</strong> ${product.labels || 'N/A'}</p>
+                                <p><strong>Nutrition facts:</strong> ${product.nutriments.energy_value || 'N/A'} ${product.nutriments.energy_unit || ''}</p>
+                                <p><strong>Fat:</strong> ${product.nutriments.fat_value || 'N/A'}g</p>
+                                <p><strong>Sugar:</strong> ${product.nutriments.sugars_value || 'N/A'}g</p>
+                                ${cost}
+                            </div>
                         `;
                         // Save scan to local storage
                         saveScanHistory(barcode, product);
@@ -142,7 +204,7 @@
                         <div class="border p-3 mt-3">
                             <p><strong>Product:</strong> ${scan.productName}</p>
                             <p><strong>Barcode:</strong> ${scan.barcode}</p>
-                            <p><strong>Scanned at:</strong> ${new Date(scan.timestamp).toLocaleString()}</p>
+                            <p><                            <p><strong>Scanned at:</strong> ${new Date(scan.timestamp).toLocaleString()}</p>
                         </div>
                     `;
                 });
@@ -158,8 +220,10 @@
                     resultDiv.innerHTML = `<h3>Search Results</h3>`;
                     if (data.products.length > 0) {
                         data.products.forEach(product => {
+                            const productImage = product.image_url ? `<img src="${product.image_url}" alt="${product.product_name}">` : '';
                             resultDiv.innerHTML += `
-                                <div class="border p-3 mt-3">
+                                <div class="product-card">
+                                    ${productImage}
                                     <h4>${product.product_name}</h4>
                                     <p><strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}</p>
                                     <p><strong>Nutrition facts:</strong> ${product.nutriments.energy_value || 'N/A'} ${product.nutriments.energy_unit || ''}</p>
@@ -183,5 +247,4 @@
     </script>
 </body>
 </html>
-
 
