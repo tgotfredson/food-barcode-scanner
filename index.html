@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
+    <title>Barcode Scanner with Image Upload</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,55 +19,53 @@
         #result {
             margin-top: 20px;
         }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <h1>Food Barcode Scanner</h1>
-    <p>Scan a barcode to get food details!</p>
+    <p>Upload an image of a barcode to get food details!</p>
 
+    <input type="file" id="upload" accept="image/*">
     <div id="scanner"></div>
-    <button id="start-scan">Start Scanning</button>
-
     <div id="result"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
-        const scannerDiv = document.getElementById('scanner');
+        const uploadInput = document.getElementById('upload');
         const resultDiv = document.getElementById('result');
-        const startScanButton = document.getElementById('start-scan');
 
-        // Function to start the scanner
-        function startScanner() {
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: scannerDiv, // Or '#yourElement' (optional)
-                },
-                decoder: {
-                    readers: ["ean_reader"] // ean_reader is for barcodes (13-digit)
-                }
-            }, function (err) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-                Quagga.start();
-            });
+        uploadInput.addEventListener('change', handleFileSelect);
 
-            // When a barcode is detected
-            Quagga.onDetected(function (data) {
-                const code = data.codeResult.code;
-                resultDiv.innerHTML = `<p>Barcode detected: ${code}</p>`;
-                // Call API here to fetch the food details
-                fetchFoodDetails(code);
-            });
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imageUrl = e.target.result;
+                    scanBarcodeFromImage(imageUrl);
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
-        // Start the scanner on button click
-        startScanButton.addEventListener('click', startScanner);
+        function scanBarcodeFromImage(imageUrl) {
+            const codeReader = new ZXing.BrowserBarcodeReader();
+            codeReader.decodeFromImageUrl(imageUrl)
+                .then(result => {
+                    const barcode = result.text;
+                    resultDiv.innerHTML = `<p>Barcode detected: ${barcode}</p>`;
+                    fetchFoodDetails(barcode);
+                })
+                .catch(err => {
+                    console.error('Error scanning barcode: ', err);
+                    resultDiv.innerHTML = `<p>Failed to detect a barcode. Please try another image.</p>`;
+                });
+        }
 
-        // Function to fetch food details from Open Food Facts API
         function fetchFoodDetails(barcode) {
             const apiUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
             fetch(apiUrl)
@@ -92,3 +90,4 @@
     </script>
 </body>
 </html>
+
